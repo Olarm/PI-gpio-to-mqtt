@@ -51,7 +51,6 @@ end
 
 print("threads: ", Threads.nthreads(), "\n")
 Threads.@threads for i = 1:num_sensors
-    print("here ", sensors[i], "\n")
     pir = sensors[i]
     f(pir, i)
 end
