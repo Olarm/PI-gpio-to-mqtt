@@ -5,6 +5,7 @@ using PiGPIO
 my_pi=Pi()
 
 heartbeat = 60
+delay = 5
 
 host = "192.168.68.108"
 port = "1883"
@@ -19,24 +20,27 @@ function f(pir, id)
     topic = "verona/"*string(id)
     state = 0
     t0 = time()
+    t1 = time()
     while true
 	sleep(0.1)
 	if PiGPIO.read(my_pi, pir) == 1
-	    if state == 0
+	    if state == 0 && time() - t1 < delay
 		val = 1
 		run(`mosquitto_pub -h $host -t $topic -m $val -q 1`)
-	    	print(string(pir)*": 1\n")
 		t0 = time()
+	    	state = 1
+	    elseif state == 1
+		t1 = time()
 	    end
-	    state = 1
 	else
-	    if state == 1
+	    if state == 1 && time() - t1 < delay
 		val = 0
-		print(string(pir)*": 0\n")
 		run(`mosquitto_pub -h $host -t $topic -m $val -q 1`)
 		t0 = time()
+	    	state = 0
+	    elseif state == 0
+		t1 = time()
 	    end
-	    state = 0
 	end
 	if time() - t0 > heartbeat
 	    run(`mosquitto_pub -h $host -t $topic -m $state -q 1`)
